@@ -1,0 +1,77 @@
+<script src="js/processing-api.min.js"></script>
+<script src="js/jquery-1.11.3.min.js" type="text/javascript"></script>
+<script type="text/javascript" src="js/pdf.js"></script>
+<html>
+<body>
+  <canvas id="the-canvas" style="border:1px solid black; display: none;"></canvas>
+  <input id='pdf' type='file'/>
+  
+  <script type="text/javascript">
+	
+	$(document).ready(function () {
+    pdfjsLib.disableWorker = true;
+	pdfjsLib.GlobalWorkerOptions.workerSrc = 'js/pdf.worker.js';
+	})
+	
+    var pdf = document.getElementById('pdf');
+    pdf.onchange = function(ev) {
+      if (file = document.getElementById('pdf').files[0]) {
+        fileReader = new FileReader();
+        fileReader.onload = function(ev) {
+          console.log(ev);
+          pdfjsLib.getDocument(fileReader.result).promise.then(function getPdfHelloWorld(pdf) {
+            pdf.getPage(1).then(function getPageHelloWorld(page) {
+              var scale = 3;
+              var viewport = page.getViewport({scale});
+              var canvas = document.getElementById('the-canvas');
+              var context = canvas.getContext('2d');
+              canvas.height = viewport.height;
+              canvas.width = viewport.width;
+              var task = page.render({canvasContext: context, viewport: viewport})
+              task.promise.then(function(){
+				var image = canvas.toDataURL("image/png");
+				var blobBin = atob(image.split(',')[1]);
+				var array = [];
+				for(var i = 0; i < blobBin.length; i++) {
+					array.push(blobBin.charCodeAt(i));
+				}
+				var file=new Blob([new Uint8Array(array)], {type: 'image/png'});
+				sendPDF(file);
+              });
+            });
+          }, function(error){
+            console.log(error);
+          });
+        };
+        fileReader.readAsArrayBuffer(file);
+      }
+    }
+	
+	function sendPDF(img) {
+		var fd = new FormData();
+		var url;
+		url = 'https://localhost:44387/api/boleto/upload';
+
+		fd.append('arquivo',img);
+
+		$.ajax({
+			type: "POST",
+			url: url,
+			data: fd,
+			processData: false,
+			contentType: false,
+		}).done(function(data) {
+			window.alert(data.mensagem);
+		}, "json");
+	}
+  </script>
+  
+
+<style id="jsbin-css">
+
+</style>
+<script>
+
+</script>
+</body>
+</html>
