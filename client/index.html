@@ -16,34 +16,43 @@
     var pdf = document.getElementById('pdf');
     pdf.onchange = function(ev) {
       if (file = document.getElementById('pdf').files[0]) {
-        fileReader = new FileReader();
-        fileReader.onload = function(ev) {
-          console.log(ev);
-          pdfjsLib.getDocument(fileReader.result).promise.then(function getPdfHelloWorld(pdf) {
-            pdf.getPage(1).then(function getPageHelloWorld(page) {
-              var scale = 3;
-              var viewport = page.getViewport({scale});
-              var canvas = document.getElementById('the-canvas');
-              var context = canvas.getContext('2d');
-              canvas.height = viewport.height;
-              canvas.width = viewport.width;
-              var task = page.render({canvasContext: context, viewport: viewport})
-              task.promise.then(function(){
-				var image = canvas.toDataURL("image/png");
-				var blobBin = atob(image.split(',')[1]);
-				var array = [];
-				for(var i = 0; i < blobBin.length; i++) {
-					array.push(blobBin.charCodeAt(i));
-				}
-				var file=new Blob([new Uint8Array(array)], {type: 'image/png'});
-				sendPDF(file);
-              });
-            });
-          }, function(error){
-            console.log(error);
-          });
-        };
-        fileReader.readAsArrayBuffer(file);
+		var tipo = document.getElementById('pdf').files[0].type;
+		if(tipo == "application/pdf"){
+			
+			fileReader = new FileReader();
+			fileReader.onload = function(ev) {
+			  pdfjsLib.getDocument(fileReader.result).promise.then(function getPdfHelloWorld(pdf) {
+				pdf.getPage(1).then(function getPageHelloWorld(page) {
+				  var scale = 3;
+				  var viewport = page.getViewport({scale});
+				  var canvas = document.getElementById('the-canvas');
+				  var context = canvas.getContext('2d');
+				  canvas.height = viewport.height;
+				  canvas.width = viewport.width;
+				  var task = page.render({canvasContext: context, viewport: viewport})
+				  task.promise.then(function(){
+					var image = canvas.toDataURL("image/png");
+					var blobBin = atob(image.split(',')[1]);
+					var array = [];
+					for(var i = 0; i < blobBin.length; i++) {
+						array.push(blobBin.charCodeAt(i));
+					}
+					var file=new Blob([new Uint8Array(array)], {type: 'image/png'});
+					sendPDF(file);
+				  });
+				});
+			  }, function(error){
+				console.log(error);
+			  });
+			};
+			fileReader.readAsArrayBuffer(file);
+			
+		} else if(tipo.substr(0,5) == "image") {
+			sendPDF(file);
+		} else {
+			window.alert("somente são permitidos arquivos de imagem ou pdf");
+		}
+        
       }
     }
 	
